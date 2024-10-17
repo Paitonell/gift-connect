@@ -34,13 +34,14 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
             position: fixed;
             left: 0;
             top: 0;
-            width: 250px;
+            width: 250px; /* Fixed width for sidebar */
             height: 100%;
             background-color: #4A90E2;
             padding-top: 20px;
             color: white;
             display: flex;
             flex-direction: column;
+            z-index: 2; /* Ensures sidebar is always on top */
         }
 
         .sidebar h3 {
@@ -63,10 +64,11 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
 
         /* Main content styles */
         .main-content {
-            margin-left: 300px; /* To make space for the sidebar */
+            margin-left: 250px; /* Match the sidebar width to prevent shifting */
             padding: 20px;
-            width: calc(100% - 260px);
+            width: calc(100% - 250px); /* Ensure it takes the rest of the space */
             box-sizing: border-box;
+            transition: margin-left 0.3s ease; /* Smooth transition */
         }
 
         .header {
@@ -78,6 +80,7 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
             color: white;
             border-radius: 10px;
         }
+
         /* Sidebar styling */
         .logo-section {
             display: flex;
@@ -206,7 +209,7 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
         }
 
         .btn-custom {
-            background-color:#4A90E2;
+            background-color: #4A90E2;
             color: white;
             padding: 15px 30px;
             font-size: 1.1em;
@@ -342,6 +345,8 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
                     <div class="content">Global Impact</div>
                 </div>
             </div>
+        </div>
+    </div>
 
     <!-- Include Bootstrap JS -->
     <script src="assets/js/jquery.min.js"></script>
@@ -364,5 +369,3 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
     </script>
 </body>
 </html>
-
-
