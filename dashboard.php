@@ -1,5 +1,11 @@
 <?php
+// Secure session settings (move before session_start)
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 1);
+ini_set('session.use_only_cookies', 1);
+
 session_start();
+session_regenerate_id(true);
 
 // Check if the user is logged in
 if (!isset($_SESSION['loggedin'])) {
@@ -8,8 +14,14 @@ if (!isset($_SESSION['loggedin'])) {
 }
 
 // Fetch user info from session
-$user_name = $_SESSION['name'];
-$role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor' or 'requester'
+$user_name = htmlspecialchars($_SESSION['name']);
+$role = htmlspecialchars($_SESSION['role']); // Assuming this stores whether the user is a 'donor' or 'requester'
+
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
 ?>
 
 <!DOCTYPE html>
@@ -68,7 +80,6 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
             padding: 20px;
             width: calc(100% - 250px); /* Ensure it takes the rest of the space */
             box-sizing: border-box;
-            transition: margin-left 0.3s ease; /* Smooth transition */
         }
 
         .header {
@@ -205,7 +216,7 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
         }
 
         .impact-card.help {
-            background-image: url('assets/img/help.jpg'); /* Corrected the image extension */
+            background-image: url('assets/img/help.jpg');
         }
 
         .btn-custom {
@@ -241,28 +252,6 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
         .logout a:hover {
             background-color: #c82333;
         }
-
-        /* Table Styling */
-        .table-container {
-            overflow-x: auto;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .table th, .table td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-
-        .table th {
-            background-color: #007bff;
-            color: white;
-        }
     </style>
 </head>
 <body>
@@ -270,7 +259,7 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
     <!-- Sidebar Section -->
     <div class="sidebar">
         <div class="logo-section">
-            <img src="assets/img/logos.png" alt="Gift Connect Logo" class="logo"> <!-- Add the logo here -->
+            <img src="assets/img/logo.webp" alt="Gift Connect Logo" class="logo"> <!-- Add the logo here -->
             <h3>Gift Connect</h3>
         </div>
         <a href="#" onclick="loadContent('dashboard')"><i class="fas fa-home"></i> Dashboard</a>
@@ -290,42 +279,42 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
 
         <!-- Logout Section -->
         <div class="logout">
-            <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <a href="logout.php?csrf_token=<?php echo $csrf_token; ?>"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>
 
     <!-- Main Content Section -->
     <div class="main-content">
         <div id="main-content" class="content-section">
-            <h2>Welcome, <?php echo htmlspecialchars($user_name); ?>!</h2>
+            <h2>Welcome, <?php echo $user_name; ?>!</h2>
 
             <!-- Quick Action Cards -->
             <div class="quick-actions">
                 <?php if ($role === 'donor'): ?>
                     <div class="action-card">
                         <i class="fas fa-plus-circle"></i>
-                        <a href="new_donation.php" class="btn-custom">Create New Donation</a>
+                        <a href="new_donation.php?csrf_token=<?php echo $csrf_token; ?>" class="btn-custom">Create New Donation</a>
                     </div>
                     <div class="action-card">
                         <i class="fas fa-eye"></i>
-                        <a href="view_donations.php" class="btn-custom">View Donations</a>
+                        <a href="view_donations.php?csrf_token=<?php echo $csrf_token; ?>" class="btn-custom">View Donations</a>
                     </div>
                     <div class="action-card">
                         <i class="fas fa-shipping-fast"></i>
-                        <a href="track_donations.php" class="btn-custom">Track Donations</a>
+                        <a href="track_donations.php?csrf_token=<?php echo $csrf_token; ?>" class="btn-custom">Track Donations</a>
                     </div>
                 <?php elseif ($role === 'requester'): ?>
                     <div class="action-card">
                         <i class="fas fa-plus-circle"></i>
-                        <a href="new_request.php" class="btn-custom">Create New Request</a>
+                        <a href="new_request.php?csrf_token=<?php echo $csrf_token; ?>" class="btn-custom">Create New Request</a>
                     </div>
                     <div class="action-card">
                         <i class="fas fa-eye"></i>
-                        <a href="view_request.php" class="btn-custom">View Requests</a>
+                        <a href="view_request.php?csrf_token=<?php echo $csrf_token; ?>" class="btn-custom">View Requests</a>
                     </div>
                     <div class="action-card">
                         <i class="fas fa-shipping-fast"></i>
-                        <a href="track_request.php" class="btn-custom">Track Requests</a>
+                        <a href="track_request.php?csrf_token=<?php echo $csrf_token; ?>" class="btn-custom">Track Requests</a>
                     </div>
                 <?php endif; ?>
             </div>
@@ -355,6 +344,12 @@ $role = $_SESSION['role']; // Assuming this stores whether the user is a 'donor'
     <!-- AJAX-based content loading -->
     <script>
         function loadContent(page) {
+            const allowedPages = ['dashboard', 'new_donation', 'view_donations', 'track_donations', 'new_request', 'view_request', 'track_request', 'profile'];
+            if (!allowedPages.includes(page)) {
+                document.getElementById('main-content').innerHTML = '<p>Error loading content.</p>';
+                return;
+            }
+
             let xhr = new XMLHttpRequest();
             xhr.open("GET", page + ".php", true);
             xhr.onload = function () {
