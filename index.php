@@ -11,7 +11,7 @@ session_start();
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
     <style>
         body {
-            background-image: url('assets/img/background.jpg'); /* Background image */
+            background-image: url('assets/img/background.jpg'); 
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -133,7 +133,7 @@ session_start();
     <!-- Header Section -->
     <header class="header">
         <div class="logo-section">
-            <img src="assets/img/logos.png" alt="Gift Connect Logo">
+            <img src="assets/img/logo.webp" alt="Gift Connect Logo">
             <h1>Gift Connect</h1>
         </div>
         <nav>
